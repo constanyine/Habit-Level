@@ -18,18 +18,27 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Ekstrak Bungkus Zip
-      run: unzip HabitLevel-1.zip
-      
+    - name: Bongkar Zip & Cek Isi
+      run: |
+        unzip -q -o HabitLevel-1.zip
+        echo "--- INI ISI ZIP LU YANG SEBENERNYA ---"
+        ls -laR
+        
     - name: Rakit APK
       run: |
-        PROJECT_DIR=$(dirname $(find . -name gradlew | head -1))
+        BUILD_FILE=$(find . -name "build.gradle" -o -name "build.gradle.kts" | head -1)
+        
+        if [ -z "$BUILD_FILE" ]; then
+          echo "ERROR FATAL: File build.gradle gak ada di dalem zip lu! Lu salah nge-zip folder."
+          exit 1
+        fi
+        
+        PROJECT_DIR=$(dirname "$BUILD_FILE")
         cd "$PROJECT_DIR"
-        chmod +x gradlew
-        ./gradlew assembleDebug
+        gradle assembleDebug
         
     - name: Ambil File APK
       uses: actions/upload-artifact@v4
       with:
         name: HabitLevel-APK
-        path: "**/app/build/outputs/apk/debug/app-debug.apk"
+        path: "**/*.apk"
